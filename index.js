@@ -16,7 +16,7 @@ botly.on("message", async (senderId, message, data) => {
   console.log(message)
   if (data.text || message.message.text) {
     const text = message.message.text;
-    console.log(`use4r: ${senderId} said: ${text}`)
+    console.log(`user: ${senderId} said: ${text}`)
     if (!users[senderId]) {
       botly.sendText({
           id: senderId,
@@ -35,6 +35,8 @@ botly.on("message", async (senderId, message, data) => {
     } else if (text.startsWith("read ")) {
       const url = text.replace("read ", "").trim();
       await handleRead(senderId, url);
+    } else if (text.startsWith("/reset") {
+      delete users[senderId]
     } else {
         await handleSearch(senderId, text);
     }
@@ -44,7 +46,7 @@ botly.on("message", async (senderId, message, data) => {
 
 // Webhook setup
 botly.on("postback", (senderId, message, postback) => {
-  console.log(`use4r: ${senderId} clicked: ${postback}`);
+  console.log(`user: ${senderId} clicked: ${postback}`);
   if (postback) {
   if (postback.startsWith("parts ")) {
     const url = postback.replace("parts ", "").trim();
@@ -78,7 +80,7 @@ botly.on("postback", (senderId, message, postback) => {
       currentIndex: 0,
       parts: [],
     };
-    botly.sendText({ id: senderId, text: "عن اي رواية تبحث عنها؟"});
+    botly.sendText({ id: senderId, text: "عن اي رواية تبحث؟"});
   }
   }
 });
