@@ -13,10 +13,9 @@ const users = {};
 // Handle incoming messages
 
 botly.on("message", async (senderId, message, data) => {
-  console.log(message)
   if (data.text || message.message.text) {
     const text = message.message.text;
-    console.log(`user: ${senderId} said: ${text}`)
+    console.log(`user ${senderId} send message`)
     if (!users[senderId]) {
       botly.sendText({
           id: senderId,
