@@ -34,7 +34,7 @@ botly.on("message", async (senderId, message, data) => {
     } else if (text.startsWith("read ")) {
       const url = text.replace("read ", "").trim();
       await handleRead(senderId, url);
-    } else if (text.startsWith("/reset") {
+    } else if (text.startsWith("/reset")) {
       delete users[senderId]
     } else {
         await handleSearch(senderId, text);
