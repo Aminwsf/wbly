@@ -64,7 +64,7 @@ botly.on("postback", (senderId, message, postback) => {
       userParts.currentIndex = 0;
       showMoreParts(senderId);
     } else {
-      botly.sendText({ id: senderId, text: "No chapters available to go back." });
+      botly.sendText({ id: senderId, text: "لا توجد فصول متاحة للرجوع إليها." });
     }
   } else if (postback === "fblite") {
     users[senderId] = {
@@ -182,7 +182,7 @@ async function handleParts(senderId, url) {
   }
 }
 
-function showMoreParts(senderId) {
+async function showMoreParts(senderId) {
   if (users[senderId] && users[senderId].parts) {
     const userParts = users[senderId];
     const startIndex = userParts.currentIndex + 3;
@@ -201,7 +201,10 @@ function showMoreParts(senderId) {
         quick_replies: quickReplies,
       });
     } else {
-      botly.sendText({ id: senderId, text: "لا توجد فصول أخرى متاحة." });
+      await botly.sendText({ id: senderId, text: "لا توجد فصول أخرى متاحة." });
+      userParts.currentIndex = 0
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      showMoreParts(senderId)
     }
   } else {
     botly.sendText({ id: senderId, text: "لا توجد فصول متاحة لإظهار المزيد." });
