@@ -160,7 +160,7 @@ async function handleParts(senderId, url) {
   try {
    /* const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/parts?&url=${url}`);
     const parts = response.data;*/
-    const parts = await getParts(storyId);
+    const parts = await getParts(url);
 
     if (parts.length > 0) {
       users[senderId].parts = parts;
