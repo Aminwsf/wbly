@@ -203,8 +203,8 @@ async function showMoreParts(senderId) {
     } else {
       await botly.sendText({ id: senderId, text: "لا توجد فصول أخرى متاحة." });
       userParts.currentIndex = 0
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      showMoreParts(senderId)
+      //await new Promise(resolve => setTimeout(resolve, 3000));
+      //showMoreParts(senderId)
     }
   } else {
     botly.sendText({ id: senderId, text: "لا توجد فصول متاحة لإظهار المزيد." });
