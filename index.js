@@ -1,6 +1,8 @@
 const Botly = require("botly");
 const axios = require("axios");
 const bodyParser = require("body-parser");
+const WattpadScraper = require('wattpad-scraper');
+const cheerio = require('cheerio');
 
 // Initialize Botly with your Facebook page token and verify 
 const botly = new Botly({
@@ -9,7 +11,7 @@ const botly = new Botly({
 });
 
 const users = {};
-
+const scraper = new WattpadScraper();
 // Handle incoming messages
 
 botly.on("message", async (senderId, message, data) => {
@@ -111,9 +113,8 @@ app.listen(PORT, () => console.log(`Bot is running on port ${PORT}`));
 
 async function handleSearch(senderId, query) {
   try {
-    const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/search?q=${query}`);
-    const results = response.data;
-
+   // const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/search?q=${query}`);
+    const results = await scraper.search(query);
     if (results.length > 0) {
       const ismxiLite = users[senderId].mxilite;
 
@@ -157,8 +158,9 @@ async function handleSearch(senderId, query) {
 
 async function handleParts(senderId, url) {
   try {
-    const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/parts?&url=${url}`);
-    const parts = response.data;
+   /* const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/parts?&url=${url}`);
+    const parts = response.data;*/
+    const parts = await getParts(storyId);
 
     if (parts.length > 0) {
       users[senderId].parts = parts;
@@ -213,8 +215,14 @@ async function showMoreParts(senderId) {
 
 async function handleRead(senderId, url) {
   try {
-    const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/read?url=${url}`);
-    const pages = response.data;
+    /*const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/read?url=${url}`);
+    const pages = response.data;*/
+    const pagess = await scraper.read(url);
+    const pages = pagess.map(page => ({
+      page: page.pageNumber,
+      content: page.content,
+      //url: page.url
+    }));
 
     if (pages.length > 0) {
       const content = pages.map(page => `Page ${page.page}: ${page.content}`).join("\n\n");
@@ -255,4 +263,26 @@ async function handleRead(senderId, url) {
   } catch (error) {
     botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء القراءة." });
   }
+}
+
+
+async function getParts(url) {
+    try {
+        const response = await axios.get(url);
+        const html = response.data;
+        const $ = cheerio.load(html);
+        const storyPartsList = $('ul[aria-label="story-parts"]'); // Updated selector
+        const storyParts = [];
+
+        storyPartsList.find('li').each((_, element) => {
+            const $element = $(element);
+            const title = $element.find('.if-sT').text().trim(); // Updated to match the new structure
+            const link = $element.find('a').attr('href');
+            storyParts.push({ title, link: link });
+        });
+
+        return storyParts;
+    } catch (error) {
+        throw new Error(error.message);
+    }
 }
