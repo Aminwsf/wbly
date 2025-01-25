@@ -38,6 +38,14 @@ botly.on("message", async (senderId, message, data) => {
       await handleRead(senderId, url);
     } else if (text.startsWith("/reset")) {
       delete users[senderId]
+      botly.sendText({
+          id: senderId,
+          text: "ماذا تستخدم؟",
+          quick_replies: [
+            botly.createQuickReply("فيسبوك لايت", "fblite"),
+            botly.createQuickReply("ماسنجر", "mxilite"),
+          ],
+        });
     } else {
         await handleSearch(senderId, text);
     }
@@ -74,14 +82,24 @@ botly.on("postback", (senderId, message, postback) => {
       currentIndex: 0,
       parts: [],
     };
-    botly.sendText({ id: senderId, text: "عن اي رواية تبحث عنها؟"});
+    botly.sendText({ id: senderId, text: "عن اي رواية تبحث؟", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
   } else if (postback === "mxilite") {
     users[senderId] = {
       mxilite: true,
       currentIndex: 0,
       parts: [],
     };
-    botly.sendText({ id: senderId, text: "عن اي رواية تبحث؟"});
+    botly.sendText({ id: senderId, text: "عن اي رواية تبحث؟", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
+  } else if (postback === "Reset") {
+    delete users[senderId]
+    botly.sendText({
+          id: senderId,
+          text: "ماذا تستخدم؟",
+          quick_replies: [
+            botly.createQuickReply("فيسبوك لايت", "fblite"),
+            botly.createQuickReply("ماسنجر", "mxilite"),
+          ],
+        });
   }
   }
 });
@@ -126,6 +144,8 @@ async function handleSearch(senderId, query) {
         const quickReplies = results.slice(0, 7).map(story => 
           botly.createQuickReply(story.title, `parts ${story.link}`)
         );
+        quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
+        
 
         botly.sendText({
           id: senderId,
@@ -144,6 +164,8 @@ async function handleSearch(senderId, query) {
         }));
 
         botly.sendGeneric({ id: senderId, elements });
+        
+    botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط اعادة التعيين و اختر فيسبوك لايت", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
       }
     } else {
       botly.sendText({ id: senderId, text: "لم يتم العثور على أي قصص. جرّب البحث مرة أخرى." });
