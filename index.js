@@ -164,7 +164,7 @@ async function handleSearch(senderId, query) {
         }));
 
         botly.sendGeneric({ id: senderId, elements });
-        
+        await new Promise(resolve => setTimeout(resolve, 3000));
     botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط اعادة التعيين و اختر فيسبوك لايت", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
       }
     } else {
