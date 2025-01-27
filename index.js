@@ -65,7 +65,7 @@ botly.on("postback", (senderId, message, postback) => {
   if (postback) {
   if (postback.startsWith("profile ")) {
       const username = postback.replace("profile ", "").trim();
-      await handleProfileStories(senderId, username);
+      handleProfileStories(senderId, username);
     } else if (postback.startsWith("parts ")) {
     const url = postback.replace("parts ", "").trim();
     handleParts(senderId, url);
