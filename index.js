@@ -329,11 +329,11 @@ async function handleProfileSearch(senderId, query) {
       const ismxiLite = users[senderId]?.mxilite;
 
       if (!ismxiLite) {
-        let profileDetails = results.map((user, index) => 
+        let profileDetails = results.slice(0, 10).map((user, index) => 
           `${index + 1}. ${user.name}\n@${user.username}\nمتابعين: ${user.numFollowers || 0}, القصص المنشورة: ${user.numStoriesPublished || 0}`
         ).join("\n\n");
 
-        const quickReplies = results.map(user => 
+        const quickReplies = results.slice(0, 10).map(user => 
           botly.createQuickReply(user.name, `username ${user.username}`)
         );
 
@@ -343,7 +343,7 @@ async function handleProfileSearch(senderId, query) {
           quick_replies: quickReplies,
         });
       } else {
-        const elements = results.map(user => ({
+        const elements = results.slice(0, 7).map(user => ({
           title: user.name,
           image_url: user.avatar,
           subtitle: `متابعين: ${user.numFollowers || 0}, القصص المنشورة: ${user.numStoriesPublished || 0}`,
