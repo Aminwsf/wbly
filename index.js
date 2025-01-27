@@ -30,7 +30,13 @@ botly.on("message", async (senderId, message, data) => {
       return
     }
 
-    if (text.startsWith("parts ")) {
+    if (text.startsWith("search ")) {
+      const q = text.replace("search ", "").trim();
+      await handleProfileSearch(senderId, q);
+    } else if (text.startsWith("profile ")) {
+      const username = text.replace("profile ", "").trim();
+      await handleProfileStories(senderId, username);
+    } else if (text.startsWith("parts ")) {
       const url = text.replace("parts ", "").trim();
       await handleParts(senderId, url);
     } else if (text.startsWith("read ")) {
@@ -57,7 +63,10 @@ botly.on("message", async (senderId, message, data) => {
 botly.on("postback", (senderId, message, postback) => {
   console.log(`user: ${senderId} clicked: ${postback}`);
   if (postback) {
-  if (postback.startsWith("parts ")) {
+  if (postback.startsWith("profile ")) {
+      const username = postback.replace("profile ", "").trim();
+      await handleProfileStories(senderId, username);
+    } else if (postback.startsWith("parts ")) {
     const url = postback.replace("parts ", "").trim();
     handleParts(senderId, url);
   } else if (postback.startsWith("read ")) {
@@ -308,3 +317,99 @@ async function getParts(url) {
         throw new Error(error.message);
     }
 }
+
+async function handleProfileSearch(senderId, query) {
+  try {
+    const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=20&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
+    const results = response.data.users; // Assuming the API returns an array of users in `data.users`
+    
+    if (results.length > 0) {
+      const ismxiLite = users[senderId].mxilite;
+
+      if (!ismxiLite) {
+        let profileDetails = results.slice(0, 11).map((user, index) => 
+          `${index + 1}. ${user.name}\n@${user.username}\nمتابعين: ${user.numFollowers}, القصص المنشورة: ${user.numStoriesPublished}`
+        ).join("\n\n");
+
+        const quickReplies = results.slice(0, 11).map(user => 
+          botly.createQuickReply(user.name, `profile ${user.username}`)
+        );
+        // quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
+        
+        botly.sendText({
+          id: senderId,
+          text: `${profileDetails}\n\nحدد المستخدم:`,
+          quick_replies: quickReplies,
+        });
+      } else {
+        const elements = results.slice(0, 7).map(user => ({
+          title: user.name,
+          image_url: user.avatar,
+          subtitle: `متابعين: ${user.numFollowers}, القصص المنشورة: ${user.numStoriesPublished}`,
+          buttons: [
+            botly.createWebURLButton("زيارة الملف الشخصي", `https://www.wattpad.com/user/${user.username}`),
+            botly.createPostbackButton("عرض القصص", `profile ${user.username}`),
+          ],
+        }));
+
+        botly.sendGeneric({ id: senderId, elements });
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط اعادة التعيين و اختر فيسبوك لايت", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
+      }
+    } else {
+      botly.sendText({ id: senderId, text: "لم يتم العثور على أي ملفات شخصية. جرّب البحث مرة أخرى." });
+    }
+  } catch (error) {
+    console.error("Error fetching profile search results:", error);
+    botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء البحث." });
+  }
+}
+
+
+async function handleProfileStories(senderId, username) {
+  try {
+    const response = await axios.get(`https://www.wattpad.com/v4/users/${username}/stories/published?offset=0&limit=11&fields=stories(title,lastPublishedPart,voteCount,readCount,commentCount,cover,tags,url,id,description,categories,completed,mature,rating,rankings,tagRankings,numParts,firstPartId,parts,isPaywalled,paidModel),total`);
+    const stories = response.data.stories; // Assuming the API returns stories in `data.stories`
+    
+    if (stories.length > 0) {
+      const ismxiLite = users[senderId].mxilite;
+
+      if (!ismxiLite) {
+        let storyDetails = stories.map((story, index) => 
+          `${index + 1}. ${story.title}\n${story.description}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}\n`
+        ).join("\n\n");
+
+        const quickReplies = stories.map(story => 
+          botly.createQuickReply(story.title, `parts ${story.url}`)
+        );
+        // quickReplies.push(botly.createQuickReply("رجوع 🔙", "profileBack"));
+
+        botly.sendText({
+          id: senderId,
+          text: `${storyDetails}\n\nحدد الرواية لعرضها:`,
+          quick_replies: quickReplies,
+        });
+      } else {
+        const elements = stories.map(story => ({
+          title: story.title,
+          image_url: story.cover,
+          subtitle: `قراءات: ${story.readCount}, إعجابات: ${story.voteCount}`,
+          buttons: [
+            botly.createWebURLButton("اقرأ الرواية", story.url),
+            botly.createPostbackButton("عرض الفصول", `parts ${story.url}`),
+          ],
+        }));
+
+        botly.sendGeneric({ id: senderId, elements });
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط رجوع واختر فيسبوك لايت", quick_replies: [botly.createQuickReply("رجوع 🔙", "profileBack")] });
+      }
+    } else {
+      botly.sendText({ id: senderId, text: "لم يتم العثور على أي روايات منشورة لهذا المستخدم." });
+    }
+  } catch (error) {
+    console.error("Error fetching user's stories:", error);
+    botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء عرض الروايات." });
+  }
+}
+
