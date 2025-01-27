@@ -420,7 +420,7 @@ async function handleProfileStories(senderId, username) {
 
 async function searchProfile(query) {
     try {
-        const url = `https://example.com/search?q=${encodeURIComponent(query)}`; // Replace with the actual URL
+        const url = `https://www.wattpad.com/search/${encodeURIComponent(query)}/people`; // Replace with the actual URL
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
 
