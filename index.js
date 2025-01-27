@@ -431,7 +431,6 @@ async function searchProfile(query) {
             const name = profileCard.find('h5').text().trim();
             const imageUrl = profileCard.find('img.display-pic').attr('src');
             const stories = profileCard.find('.card-meta').find('p').eq(0).text().replace(/[^0-9]/g, '');
-            const readingLists = profileCard.find('.card-meta').find('p').eq(1).text().replace(/[^0-9]/g, '');
             const followers = profileCard.find('.card-meta').find('p').eq(2).text().replace(/[^0-9K]/g, '');
 
             profiles.push({
@@ -439,12 +438,17 @@ async function searchProfile(query) {
                 username,
                 avatar: imageUrl,
                 numStoriesPublished: parseInt(stories),
-                numStoriesPublished2: parseInt(readingLists),
                 numFollowers: parseFloat(followers.replace('K', '')) * (followers.includes('K') ? 1000 : 1),
             });
         });
 
-        return profiles;
+        return profiles.map(profile => ({
+            name: profile.name,
+            username: profile.username.replace("@",""),
+            avatar: profile.avatar,
+            numStoriesPublished: profile.numStoriesPublished,
+            numFollowers: profile.numFollowers
+        }));
     } catch (error) {
         console.error('Error fetching profiles:', error.message);
         return [];
