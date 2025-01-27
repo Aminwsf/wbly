@@ -31,8 +31,8 @@ botly.on("message", async (senderId, message, data) => {
     }
 
     if (text.startsWith("profile ")) {
-      const q = text.replace("profile ", "").trim();
-      await handleProfileSearch(senderId, q);
+      const qry = text.replace("profile ", "").trim();
+      await handleProfileSearch(senderId, qry);
     } else if (text.startsWith("usename ")) {
       const username = text.replace("username ", "").trim();
       await handleProfileStories(senderId, username);
@@ -321,21 +321,20 @@ async function getParts(url) {
 async function handleProfileSearch(senderId, query) {
   try {
     const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=11&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
-    const results = response.data; // Assuming the API returns an array of users in `data.users`
-    
-    if (results.length > 0) {
+    const results = response.data; // المصفوفة تأتي مباشرة
+
+    if (results && results.length > 0) {
       const ismxiLite = users[senderId].mxilite;
 
       if (!ismxiLite) {
         let profileDetails = results.map((user, index) => 
-          `${index + 1}. ${user.name}\n@${user.username}\nمتابعين: ${user.numFollowers}, القصص المنشورة: ${user.numStoriesPublished}`
+          `${index + 1}. ${user.name}\n@${user.username}\nمتابعين: ${user.numFollowers || 0}, القصص المنشورة: ${user.numStoriesPublished || 0}`
         ).join("\n\n");
 
         const quickReplies = results.map(user => 
           botly.createQuickReply(user.name, `username ${user.username}`)
         );
-        // quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
-        
+
         botly.sendText({
           id: senderId,
           text: `${profileDetails}\n\nحدد المستخدم:`,
@@ -345,7 +344,7 @@ async function handleProfileSearch(senderId, query) {
         const elements = results.map(user => ({
           title: user.name,
           image_url: user.avatar,
-          subtitle: `متابعين: ${user.numFollowers}, القصص المنشورة: ${user.numStoriesPublished}`,
+          subtitle: `متابعين: ${user.numFollowers || 0}, القصص المنشورة: ${user.numStoriesPublished || 0}`,
           buttons: [
             botly.createWebURLButton("زيارة الملف الشخصي", `https://www.wattpad.com/user/${user.username}`),
             botly.createPostbackButton("عرض القصص", `username ${user.username}`),
@@ -354,16 +353,17 @@ async function handleProfileSearch(senderId, query) {
 
         botly.sendGeneric({ id: senderId, elements });
         await new Promise(resolve => setTimeout(resolve, 3000));
-        botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط اعادة التعيين و اختر فيسبوك لايت", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
+        botly.sendText({ id: senderId, text: "إذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة. اضغط إعادة التعيين واختر فيسبوك لايت.", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
       }
     } else {
       botly.sendText({ id: senderId, text: "لم يتم العثور على أي ملفات شخصية. جرّب البحث مرة أخرى." });
     }
   } catch (error) {
-    console.error("Error fetching profile search results:", error);
-    botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء البحث." });
+    console.error("حدث خطأ أثناء جلب نتائج البحث:", error);
+    botly.sendText({ id: senderId, text: "عذرًا، حدث خطأ أثناء البحث." });
   }
 }
+
 
 
 async function handleProfileStories(senderId, username) {
