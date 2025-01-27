@@ -30,11 +30,11 @@ botly.on("message", async (senderId, message, data) => {
       return
     }
 
-    if (text.startsWith("search ")) {
-      const q = text.replace("search ", "").trim();
+    if (text.startsWith("profile ")) {
+      const q = text.replace("profile ", "").trim();
       await handleProfileSearch(senderId, q);
-    } else if (text.startsWith("profile ")) {
-      const username = text.replace("profile ", "").trim();
+    } else if (text.startsWith("usename ")) {
+      const username = text.replace("username ", "").trim();
       await handleProfileStories(senderId, username);
     } else if (text.startsWith("parts ")) {
       const url = text.replace("parts ", "").trim();
@@ -63,8 +63,8 @@ botly.on("message", async (senderId, message, data) => {
 botly.on("postback", (senderId, message, postback) => {
   console.log(`user: ${senderId} clicked: ${postback}`);
   if (postback) {
-  if (postback.startsWith("profile ")) {
-      const username = postback.replace("profile ", "").trim();
+  if (postback.startsWith("username ")) {
+      const username = postback.replace("username ", "").trim();
       handleProfileStories(senderId, username);
     } else if (postback.startsWith("parts ")) {
     const url = postback.replace("parts ", "").trim();
@@ -321,7 +321,7 @@ async function getParts(url) {
 async function handleProfileSearch(senderId, query) {
   try {
     const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=20&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
-    const results = response.data.users; // Assuming the API returns an array of users in `data.users`
+    const results = response.data; // Assuming the API returns an array of users in `data.users`
     
     if (results.length > 0) {
       const ismxiLite = users[senderId].mxilite;
@@ -332,7 +332,7 @@ async function handleProfileSearch(senderId, query) {
         ).join("\n\n");
 
         const quickReplies = results.slice(0, 11).map(user => 
-          botly.createQuickReply(user.name, `profile ${user.username}`)
+          botly.createQuickReply(user.name, `username ${user.username}`)
         );
         // quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
         
@@ -348,7 +348,7 @@ async function handleProfileSearch(senderId, query) {
           subtitle: `متابعين: ${user.numFollowers}, القصص المنشورة: ${user.numStoriesPublished}`,
           buttons: [
             botly.createWebURLButton("زيارة الملف الشخصي", `https://www.wattpad.com/user/${user.username}`),
-            botly.createPostbackButton("عرض القصص", `profile ${user.username}`),
+            botly.createPostbackButton("عرض القصص", `username ${user.username}`),
           ],
         }));
 
