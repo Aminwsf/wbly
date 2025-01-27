@@ -146,11 +146,11 @@ async function handleSearch(senderId, query) {
       const ismxiLite = users[senderId].mxilite;
 
       if (!ismxiLite) {
-        let storyDetails = results.slice(0, 7).map((story, index) => 
+        let storyDetails = results.slice(0, 10).map((story, index) => 
           `${index + 1}. ${story.title}\nقراءات: ${story.reads}, إعجابات: ${story.votes}`
         ).join("\n\n");
 
-        const quickReplies = results.slice(0, 7).map(story => 
+        const quickReplies = results.slice(0, 10).map(story => 
           botly.createQuickReply(story.title, `parts ${story.link}`)
         );
         quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
@@ -321,10 +321,14 @@ async function getParts(url) {
 async function handleProfileSearch(senderId, query) {
   try {
     const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=11&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
-    const results = response.data; // المصفوفة تأتي مباشرة
+    const resultss = {
+      users: response.data
+    }; // البيانات المفترضة كمصفوفة مباشرة
+    const results = resultss.users
 
-    if (results && results.length > 0) {
-      const ismxiLite = users[senderId].mxilite;
+    // التحقق من أن النتائج عبارة عن مصفوفة
+    if (Array.isArray(results) && results.length > 0) {
+      const ismxiLite = users[senderId]?.mxilite;
 
       if (!ismxiLite) {
         let profileDetails = results.map((user, index) => 
@@ -355,6 +359,9 @@ async function handleProfileSearch(senderId, query) {
         await new Promise(resolve => setTimeout(resolve, 3000));
         botly.sendText({ id: senderId, text: "إذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة. اضغط إعادة التعيين واختر فيسبوك لايت.", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
       }
+    } else if (results && typeof results === "object") {
+      botly.sendText({ id: senderId, text: "النتائج ليست مصفوفة كما هو متوقع. تحقق من البيانات الواردة من API." });
+      console.error("البيانات الواردة من API:", results);
     } else {
       botly.sendText({ id: senderId, text: "لم يتم العثور على أي ملفات شخصية. جرّب البحث مرة أخرى." });
     }
@@ -363,7 +370,6 @@ async function handleProfileSearch(senderId, query) {
     botly.sendText({ id: senderId, text: "عذرًا، حدث خطأ أثناء البحث." });
   }
 }
-
 
 
 async function handleProfileStories(senderId, username) {
