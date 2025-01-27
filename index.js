@@ -320,11 +320,9 @@ async function getParts(url) {
 
 async function handleProfileSearch(senderId, query) {
   try {
-    const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=11&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
-    const resultss = {
-      users: response.data
-    }; // البيانات المفترضة كمصفوفة مباشرة
-    const results = resultss.users
+    //const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=11&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
+    
+    const results = await searchProfile(query)
 
     // التحقق من أن النتائج عبارة عن مصفوفة
     if (Array.isArray(results) && results.length > 0) {
@@ -419,3 +417,36 @@ async function handleProfileStories(senderId, username) {
   }
 }
 
+
+async function searchProfile(query) {
+    try {
+        const url = `https://example.com/search?q=${encodeURIComponent(query)}`; // Replace with the actual URL
+        const { data } = await axios.get(url);
+        const $ = cheerio.load(data);
+
+        const profiles = [];
+        $('.list-group .list-group-item').each((index, element) => {
+            const profileCard = $(element).find('.profile-card-data');
+            const username = profileCard.find('.username').text().trim();
+            const name = profileCard.find('h5').text().trim();
+            const imageUrl = profileCard.find('img.display-pic').attr('src');
+            const stories = profileCard.find('.card-meta').find('p').eq(0).text().replace(/[^0-9]/g, '');
+            const readingLists = profileCard.find('.card-meta').find('p').eq(1).text().replace(/[^0-9]/g, '');
+            const followers = profileCard.find('.card-meta').find('p').eq(2).text().replace(/[^0-9K]/g, '');
+
+            profiles.push({
+                name,
+                username,
+                avatar: imageUrl,
+                numStoriesPublished: parseInt(stories),
+                numStoriesPublished2: parseInt(readingLists),
+                numFollowers: parseFloat(followers.replace('K', '')) * (followers.includes('K') ? 1000 : 1),
+            });
+        });
+
+        return profiles;
+    } catch (error) {
+        console.error('Error fetching profiles:', error.message);
+        return [];
+    }
+}
