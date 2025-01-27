@@ -320,18 +320,18 @@ async function getParts(url) {
 
 async function handleProfileSearch(senderId, query) {
   try {
-    const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=20&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
+    const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=11&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
     const results = response.data; // Assuming the API returns an array of users in `data.users`
     
     if (results.length > 0) {
       const ismxiLite = users[senderId].mxilite;
 
       if (!ismxiLite) {
-        let profileDetails = results.slice(0, 11).map((user, index) => 
+        let profileDetails = results.map((user, index) => 
           `${index + 1}. ${user.name}\n@${user.username}\nمتابعين: ${user.numFollowers}, القصص المنشورة: ${user.numStoriesPublished}`
         ).join("\n\n");
 
-        const quickReplies = results.slice(0, 11).map(user => 
+        const quickReplies = results.map(user => 
           botly.createQuickReply(user.name, `username ${user.username}`)
         );
         // quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
@@ -342,7 +342,7 @@ async function handleProfileSearch(senderId, query) {
           quick_replies: quickReplies,
         });
       } else {
-        const elements = results.slice(0, 7).map(user => ({
+        const elements = results.map(user => ({
           title: user.name,
           image_url: user.avatar,
           subtitle: `متابعين: ${user.numFollowers}, القصص المنشورة: ${user.numStoriesPublished}`,
