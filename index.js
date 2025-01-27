@@ -420,7 +420,9 @@ async function handleProfileStories(senderId, username) {
 
 async function searchProfile(query) {
     try {
-        const url = `https://www.wattpad.com/search/${encodeURIComponent(query)}/people`; // Replace with the actual URL
+        const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=11&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
+      const profiles = response.data
+    /*const url = `https://www.wattpad.com/search/${encodeURIComponent(query)}/people`; // Replace with the actual URL
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
 
@@ -440,11 +442,11 @@ async function searchProfile(query) {
                 numStoriesPublished: parseInt(stories),
                 numFollowers: parseFloat(followers.replace('K', '')) * (followers.includes('K') ? 1000 : 1),
             });
-        });
+        });*/
 
         return profiles.map(profile => ({
             name: profile.name,
-            username: profile.username.replace("@",""),
+            username: profile.username,
             avatar: profile.avatar,
             numStoriesPublished: profile.numStoriesPublished,
             numFollowers: profile.numFollowers
