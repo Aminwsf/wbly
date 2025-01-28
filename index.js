@@ -147,7 +147,7 @@ async function handleSearch(senderId, query) {
 
       if (!ismxiLite) {
         let storyDetails = results.slice(0, 10).map((story, index) => 
-          `${index + 1}. ${story.title}\nقراءات: ${story.reads}, إعجابات: ${story.votes}`
+          `${index + 1}. ${story.title}\nالمؤلف: ${story.author}\nقراءات: ${story.reads}, إعجابات: ${story.votes}, الفصول: ${story.parts}`
         ).join("\n\n");
 
         const quickReplies = results.slice(0, 10).map(story => 
@@ -165,7 +165,7 @@ async function handleSearch(senderId, query) {
         const elements = results.slice(0, 7).map(story => ({
           title: story.title,
           image_url: story.thumbnail,
-          subtitle: `Reads: ${story.reads}, Votes: ${story.votes}`,
+          subtitle: `المؤلف: ${story.author}\nقراءات: ${story.reads}, إعجابات: ${story.votes}, الفصول: ${story.parts}`,
           buttons: [
             botly.createWebURLButton("اقرأ على واتباد", story.link),
             botly.createPostbackButton("عرض الفصول", `parts ${story.link}`),
