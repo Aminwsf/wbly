@@ -325,7 +325,7 @@ async function handleProfileSearch(senderId, query) {
     const results = await searchProfile(query)
 
     // التحقق من أن النتائج عبارة عن مصفوفة
-    if (Array.isArray(results) && results.length > 0) {
+    if (results && results.length > 0) {
       const ismxiLite = users[senderId]?.mxilite;
 
       if (!ismxiLite) {
@@ -421,7 +421,9 @@ async function handleProfileStories(senderId, username) {
 async function searchProfile(query) {
     try {
         const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=11&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
-      const profiles = response.data
+      console.log(response.data)
+      return response.data
+      //const profiles = response.data
     /*const url = `https://www.wattpad.com/search/${encodeURIComponent(query)}/people`; // Replace with the actual URL
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
