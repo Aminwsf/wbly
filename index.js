@@ -143,7 +143,11 @@ app.listen(PORT, () => console.log(`Bot is running on port ${PORT}`));
 
 async function handleSearch(senderId, query) {
   try {
-  const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=9&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`);
+  const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=9&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`, {
+    headers: {
+      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7'
+    }
+  });
    // const results = await scraper.search(query);
     const results = response.data.stories
     if (results.length > 0) {
