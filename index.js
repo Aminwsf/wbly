@@ -141,7 +141,7 @@ app.listen(PORT, () => console.log(`Bot is running on port ${PORT}`));
 async function handleSearch(senderId, query) {
   try {
    // const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/search?q=${query}`);
-    const results = await scraper.search(query);
+    const results = await scrapersearch(query);
     if (results.length > 0) {
       const ismxiLite = users[senderId].mxilite;
 
