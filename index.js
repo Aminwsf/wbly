@@ -145,7 +145,8 @@ async function handleSearch(senderId, query) {
   try {
   const response = await axios.get(`https://www.wattpad.com/v4/search/users/?query=${query}&limit=9&offset=0&fields=username,name,avatar,description,numLists,numFollowers,numStoriesPublished,badges,following`, {
     headers: {
-      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7'
+      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
     }
   });
    // const results = await scraper.search(query);
@@ -201,7 +202,12 @@ async function handleSearch(senderId, query) {
 
 async function handleSmore(senderId, url) {
   try {
-  const response = await axios.get(url);
+  const response = await axios.get(url, {
+    headers: {
+      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
+    }
+  });
    // const results = await scraper.search(query);
     const results = response.data.stories
     if (results.length > 0) {
