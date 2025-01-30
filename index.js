@@ -157,7 +157,7 @@ async function handleSearch(senderId, query) {
 
       if (!ismxiLite) {
         let storyDetails = results.slice(0, 9).map((story, index) => 
-          `${index + 1}. ${story.title}\nالمؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 30)}`
+          `${index + 1}. ${story.title}\nالمؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 30)}...`
         ).join("\n\n");
 
         const quickReplies = results.slice(0, 9).map(story => 
@@ -177,7 +177,7 @@ async function handleSearch(senderId, query) {
         const elements = results.slice(0, 7).map(story => ({
           title: story.title,
           image_url: story.cover,
-          subtitle: `المؤلف: ${story.user.namr}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}`,
+          subtitle: `المؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}...`,
           buttons: [
             botly.createWebURLButton("اقرأ على واتباد", story.url),
             botly.createPostbackButton("عرض الفصول", `parts ${story.url}`),
@@ -217,7 +217,7 @@ async function handleSmore(senderId, url) {
 
       if (!ismxiLite) {
         let storyDetails = results.slice(0, 9).map((story, index) => 
-          `${index + 1}. ${story.title}\nالمؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 30)}`
+          `${index + 1}. ${story.title}\nالمؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 30)}...`
         ).join("\n\n");
 
         const quickReplies = results.slice(0, 9).map(story => 
@@ -237,7 +237,7 @@ async function handleSmore(senderId, url) {
         const elements = results.slice(0, 7).map(story => ({
           title: story.title,
           image_url: story.cover,
-          subtitle: `المؤلف: ${story.user.namr}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}`,
+          subtitle: `المؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}...`,
           buttons: [
             botly.createWebURLButton("اقرأ على واتباد", story.url),
             botly.createPostbackButton("عرض الفصول", `parts ${story.url}`),
@@ -425,7 +425,7 @@ async function handleProfileSearch(senderId, query) {
           subtitle: `متابعين: ${user.numFollowers || 0}, القصص المنشورة: ${user.numStoriesPublished || 0}`,
           buttons: [
             botly.createWebURLButton("زيارة الملف الشخصي", `https://www.wattpad.com/user/${user.username}`),
-            botly.createPostbackButton("عرض القصص", `username ${user.username}`),
+            botly.createPostbackButton("عرض الروايات", `username ${user.username}`),
           ],
         }));
 
@@ -448,7 +448,13 @@ async function handleProfileSearch(senderId, query) {
 
 async function handleProfileStories(senderId, username) {
   try {
-    const response = await axios.get(`https://www.wattpad.com/v4/users/${username}/stories/published?offset=0&limit=11&fields=stories(title,lastPublishedPart,voteCount,readCount,commentCount,cover,tags,url,id,description,categories,completed,mature,rating,rankings,tagRankings,numParts,firstPartId,parts,isPaywalled,paidModel),total`);
+    const response = await axios.get(`https://www.wattpad.com/v4/users/${username}/stories/published?offset=0&limit=11&fields=stories(title,lastPublishedPart,voteCount,readCount,commentCount,cover,tags,url,id,description,categories,completed,mature,rating,rankings,tagRankings,numParts,firstPartId,parts,isPaywalled,paidModel),total`, {
+      headers: {
+      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Accept': 'application/json',
+      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
+      }
+    });
     const stories = response.data.stories; // Assuming the API returns stories in `data.stories`
     
     if (stories.length > 0) {
@@ -456,7 +462,7 @@ async function handleProfileStories(senderId, username) {
 
       if (!ismxiLite) {
         let storyDetails = stories.map((story, index) => 
-          `${index + 1}. ${story.title}\n${story.description}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}\n`
+          `${index + 1}. ${story.title}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}\n\n${story.description.slice(0, 20)}...`
         ).join("\n\n");
 
         const quickReplies = stories.map(story => 
