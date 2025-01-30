@@ -72,9 +72,6 @@ botly.on("postback", (senderId, message, postback) => {
   } else if (postback.startsWith("read ")) {
     const url = postback.replace("read ", "").trim();
     handleRead(senderId, url);
-  } else if (postback.startsWith("Smore ")) {
-    const url = postback.replace("Smore ", "").trim();
-    handleSmore(senderId, url);
   } else if (postback === "more_parts") {
     showMoreParts(senderId);
   } else if (postback.startsWith("next_part")) {
@@ -143,29 +140,21 @@ app.listen(PORT, () => console.log(`Bot is running on port ${PORT}`));
 
 async function handleSearch(senderId, query) {
   try {
-  const response = await axios.get(`https://www.wattpad.com/v4/search/stories/?query=${query}&mature=true&limit=15&fields=stories(id,title,voteCount,readCount,commentCount,description,mature,completed,cover,url,numParts,isPaywalled,paidModel,length,language(id),user(name),lastPublishedPart(createDate),promoted,sponsor(name,avatar),tags,tracking(clickUrl,impressionUrl,thirdParty(impressionUrls,clickUrls)),contest(endDate,ctaLabel,ctaURL)),total,tags,nextUrl`, {
-    headers: {
-      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
-    }
-  });
-   // const results = await scraper.search(query);
-    const results = response.data.stories
+   // const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/search?q=${query}`);
+    const results = await scraper.search(query);
     if (results.length > 0) {
       const ismxiLite = users[senderId].mxilite;
 
       if (!ismxiLite) {
-        let storyDetails = results.slice(0, 9).map((story, index) => 
-          `${index + 1}. ${story.title}\nالمؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 30)}`
+        let storyDetails = results.slice(0, 10).map((story, index) => 
+          `${index + 1}. ${story.title}\nالمؤلف: ${story.author}\nقراءات: ${story.reads}, إعجابات: ${story.votes}, الفصول: ${story.parts}`
         ).join("\n\n");
 
-        const quickReplies = results.slice(0, 9).map(story => 
-          botly.createQuickReply(story.title, `parts ${story.url}`)
+        const quickReplies = results.slice(0, 10).map(story => 
+          botly.createQuickReply(story.title, `parts ${story.link}`)
         );
         quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
-        if (response.data?.nextUrl) {
-        quickReplies.push(botly.createQuickReply("عرض المزيد", `Smore ${response.data.nextUrl}`));
-        }
+        
 
         botly.sendText({
           id: senderId,
@@ -175,80 +164,17 @@ async function handleSearch(senderId, query) {
       } else {
         const elements = results.slice(0, 7).map(story => ({
           title: story.title,
-          image_url: story.cover,
-          subtitle: `المؤلف: ${story.user.namr}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}`,
+          image_url: story.thumbnail,
+          subtitle: `المؤلف: ${story.author}\nقراءات: ${story.reads}, إعجابات: ${story.votes}, الفصول: ${story.parts}`,
           buttons: [
-            botly.createWebURLButton("اقرأ على واتباد", story.url),
-            botly.createPostbackButton("عرض الفصول", `parts ${story.url}`),
+            botly.createWebURLButton("اقرأ على واتباد", story.link),
+            botly.createPostbackButton("عرض الفصول", `parts ${story.link}`),
           ],
         }));
 
         botly.sendGeneric({ id: senderId, elements });
         await new Promise(resolve => setTimeout(resolve, 3000));
-        const quickReplies = [botly.createQuickReply("إعادة التعيين 🔁", "Reset")]
-        if (response.data?.nextUrl) {
-        quickReplies.push(botly.createQuickReply("عرض المزيد", `Smore ${response.data.nextUrl}`));
-        }
-    botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط اعادة التعيين و اختر فيسبوك لايت", quick_replies: quickReplies });
-      }
-    } else {
-      botly.sendText({ id: senderId, text: "لم يتم العثور على أي قصص. جرّب البحث مرة أخرى." });
-    }
-  } catch (error) {
-    console.error("Error fetching search results:", error);
-    botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء البحث." });
-  }
-}
-
-async function handleSmore(senderId, url) {
-  try {
-  const response = await axios.get(url, {
-    headers: {
-      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
-    }
-  });
-   // const results = await scraper.search(query);
-    const results = response.data.stories
-    if (results.length > 0) {
-      const ismxiLite = users[senderId].mxilite;
-
-      if (!ismxiLite) {
-        let storyDetails = results.slice(0, 9).map((story, index) => 
-          `${index + 1}. ${story.title}\nالمؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 30)}`
-        ).join("\n\n");
-
-        const quickReplies = results.slice(0, 9).map(story => 
-          botly.createQuickReply(story.title, `parts ${story.url}`)
-        );
-        quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
-        if (response.data?.nextUrl) {
-        quickReplies.push(botly.createQuickReply("عرض المزيد", `Smore ${response.data.nextUrl}`));
-        }
-
-        botly.sendText({
-          id: senderId,
-          text: `${storyDetails}\n\nحدد الرواية:`,
-          quick_replies: quickReplies,
-        });
-      } else {
-        const elements = results.slice(0, 7).map(story => ({
-          title: story.title,
-          image_url: story.cover,
-          subtitle: `المؤلف: ${story.user.namr}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}`,
-          buttons: [
-            botly.createWebURLButton("اقرأ على واتباد", story.url),
-            botly.createPostbackButton("عرض الفصول", `parts ${story.url}`),
-          ],
-        }));
-
-        botly.sendGeneric({ id: senderId, elements });
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        const quickReplies = [botly.createQuickReply("إعادة التعيين 🔁", "Reset")]
-        if (response.data?.nextUrl) {
-        quickReplies.push(botly.createQuickReply("عرض المزيد", `Smore ${response.data.nextUrl}`));
-        }
-    botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط اعادة التعيين و اختر فيسبوك لايت", quick_replies: quickReplies });
+    botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط اعادة التعيين و اختر فيسبوك لايت", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
       }
     } else {
       botly.sendText({ id: senderId, text: "لم يتم العثور على أي قصص. جرّب البحث مرة أخرى." });
