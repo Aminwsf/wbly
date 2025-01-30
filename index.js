@@ -458,3 +458,41 @@ async function searchProfile(query) {
         return [];
     }
 }
+
+
+async function scrapersearch(query) {
+        try {
+            const response = await axios.get(`https://www.wattpad.com/search/${encodeURIComponent(query)}`, {
+              headers: {
+      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
+              }
+            });
+            const html = response.data;
+            const $ = cheerio.load(html);
+            const storyCards = $('.story-card');
+
+            return storyCards.map((_, element) => {
+                const $element = $(element);
+                const title = $element.find('.sr-only').first().text().trim();
+                const link = 'https://www.wattpad.com' + $element.attr('href');
+                const description = $element.find('.description').first().text().trim();
+                const thumbnail = $element.find('.cover img').attr('src') || '';
+                const stats = $element.find('.new-story-stats .stats-item');
+                let reads = '', votes = '', parts = '';
+
+                stats.each((_, stat) => {
+                    const label = $(stat).find('.stats-label__text').text().trim().toLowerCase();
+                    const value = $(stat).find('.stats-value').text().trim();
+                    if (label === 'reads') reads = value;
+                    if (label === 'votes') votes = value;
+                    if (label === 'parts') parts = value;
+                });
+
+                const author = $element.find('.username').text().trim();
+                return { title, author, link, thumbnail, reads, votes, parts, description };
+            }).get();
+        } catch (error) {
+            throw new Error(error.message);
+        }
+}
