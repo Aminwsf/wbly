@@ -3,6 +3,7 @@ const axios = require("axios");
 const bodyParser = require("body-parser");
 const WattpadScraper = require('wattpad-scraper');
 const cheerio = require('cheerio');
+const parser = require('node-html-parser');
 
 // Initialize Botly with your Facebook page token and verify 
 const botly = new Botly({
@@ -18,7 +19,7 @@ botly.on("message", async (senderId, message, data) => {
   if (data.text || message.message.text) {
     const text = message.message.text;
     console.log(`user ${senderId} send message`)
-    if (!users[senderId]) {
+    if (!users[senderId] || !users[senderId].test) {
       botly.sendText({
           id: senderId,
           text: "ماذا تستخدم؟",
@@ -93,6 +94,7 @@ botly.on("postback", (senderId, message, postback) => {
       mxilite: false,
       currentIndex: 0,
       parts: [],
+      test: "lol"
     };
     botly.sendText({ id: senderId, text: "عن اي رواية تبحث؟", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
   } else if (postback === "mxilite") {
@@ -100,6 +102,7 @@ botly.on("postback", (senderId, message, postback) => {
       mxilite: true,
       currentIndex: 0,
       parts: [],
+      test: "lol"
     };
     botly.sendText({ id: senderId, text: "عن اي رواية تبحث؟", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
   } else if (postback === "Reset") {
@@ -161,7 +164,7 @@ async function handleSearch(senderId, query) {
         ).join("\n\n");
 
         const quickReplies = results.slice(0, 9).map(story => 
-          botly.createQuickReply(story.title, `parts ${story.url}`)
+          botly.createQuickReply(story.title, `parts ${story.id}`)
         );
         quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
         if (response.data?.nextUrl) {
@@ -180,7 +183,7 @@ async function handleSearch(senderId, query) {
           subtitle: `المؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}...`,
           buttons: [
             botly.createWebURLButton("اقرأ على واتباد", story.url),
-            botly.createPostbackButton("عرض الفصول", `parts ${story.url}`),
+            botly.createPostbackButton("عرض الفصول", `parts ${story.id}`),
           ],
         }));
 
@@ -221,7 +224,7 @@ async function handleSmore(senderId, url) {
         ).join("\n\n");
 
         const quickReplies = results.slice(0, 9).map(story => 
-          botly.createQuickReply(story.title, `parts ${story.url}`)
+          botly.createQuickReply(story.title, `parts ${story.id}`)
         );
         quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
         if (response.data?.nextUrl) {
@@ -240,7 +243,7 @@ async function handleSmore(senderId, url) {
           subtitle: `المؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}...`,
           buttons: [
             botly.createWebURLButton("اقرأ على واتباد", story.url),
-            botly.createPostbackButton("عرض الفصول", `parts ${story.url}`),
+            botly.createPostbackButton("عرض الفصول", `parts ${story.id}`),
           ],
         }));
 
@@ -265,16 +268,22 @@ async function handleSmore(senderId, url) {
 
 async function handleParts(senderId, url) {
   try {
-   /* const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/parts?&url=${url}`);
-    const parts = response.data;*/
-    const parts = await getParts(url);
+    const response = await axios.get(`https://www.wattpad.com/api/v3/stories/${url}/?fields=id,url,title,length,createDate,modifyDate,voteCount,readCount,commentCount,promoted,sponsor,language,user,description,cover,highlight_colour,completed,isPaywalled,categories,numParts,readingPosition,deleted,dateAdded,lastPublishedPart(createDate),tags,copyright,rating,story_text_url(text),,parts(id,title,voteCount,commentCount,videoId,readCount,photoUrl,modifyDate,length,voted,deleted,text_url(text),dedication)`, {
+    headers: {
+      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Accept': 'application/json',
+      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
+    }
+  });
+    const parts = response.data.parts;
+    // const parts = await getParts(url);
 
     if (parts.length > 0) {
       users[senderId].parts = parts;
       users[senderId].currentIndex = 0;
 
       const quickReplies = parts.slice(0, 3).map(part =>
-        botly.createQuickReply(part.title, `read ${part.link}`)
+        botly.createQuickReply(part.title, `read ${part.id}`)
       );
       quickReplies.push(botly.createQuickReply("عرض المزيد", "more_parts"));
 
@@ -294,11 +303,11 @@ async function handleParts(senderId, url) {
 async function showMoreParts(senderId) {
   if (users[senderId] && users[senderId].parts) {
     const userParts = users[senderId];
-    const startIndex = userParts.currentIndex + 3;
+    const startIndex = userParts.currentIndex + 7;
 
     if (startIndex < userParts.parts.length) {
-      const quickReplies = userParts.parts.slice(startIndex, startIndex + 3).map(part =>
-        botly.createQuickReply(part.title, `read ${part.link}`)
+      const quickReplies = userParts.parts.slice(startIndex, startIndex + 7).map(part =>
+        botly.createQuickReply(part.title, `read ${part.id}`)
       );
       quickReplies.push(botly.createQuickReply("عرض المزيد", "more_parts"));
 
@@ -322,17 +331,24 @@ async function showMoreParts(senderId) {
 
 async function handleRead(senderId, url) {
   try {
-    /*const response = await axios.get(`https://myapi.ddns.net/api/search/wattpad/read?url=${url}`);
-    const pages = response.data;*/
-    const pagess = await scraper.read(url);
+    const response = await axios.get(`https://www.wattpad.com/apiv2/storytext?id=${url}&include_paragraph_id=1&output=json`, {
+    headers: {
+      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Accept': 'application/json',
+      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
+    }
+  });
+    const restext = response.data.text;
+    /*const pagess = await scraper.read(url);
     const pages = pagess.map(page => ({
       page: page.pageNumber,
       content: page.content,
       //url: page.url
-    }));
+    }));*/
 
     if (pages.length > 0) {
-      const content = pages.map(page => `Page ${page.page}: ${page.content}`).join("\n\n");
+      //const content = pages.map(page => `Page ${page.page}: ${page.content}`).join("\n\n");
+      const content = parser.parse(restext).textContent;
       const chunkSize = 2000;
 
       for (let i = 0; i < content.length; i += chunkSize) {
@@ -341,8 +357,13 @@ async function handleRead(senderId, url) {
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
 
+      if (!users[senderId]) {
+        const dtparts = await getPartDetails(url)
+        users[senderId] = dtparts
+      }
       const user = users[senderId];
-      const currentIndex = user.parts.findIndex(part => part.link === url);
+      const currentIndex = user.parts.findIndex(part => part.id === url);
+
 
       if (currentIndex !== -1 && currentIndex + 1 < user.parts.length) {
         const nextPart = user.parts[currentIndex + 1];
@@ -351,7 +372,7 @@ async function handleRead(senderId, url) {
           id: senderId,
           text: "نهاية هذا الفصل هل ترغب بالاستمرار؟",
           quick_replies: [
-            botly.createQuickReply("الفصل التالي", `read ${nextPart.link}`),
+            botly.createQuickReply("الفصل التالي", `read ${nextPart.id}`),
             botly.createQuickReply("العودة إلى الفصول", "back_to_parts"),
           ],
         });
@@ -466,7 +487,7 @@ async function handleProfileStories(senderId, username) {
         ).join("\n\n");
 
         const quickReplies = stories.map(story => 
-          botly.createQuickReply(story.title, `parts ${story.url}`)
+          botly.createQuickReply(story.title, `parts ${story.id}`)
         );
         // quickReplies.push(botly.createQuickReply("رجوع 🔙", "profileBack"));
 
@@ -482,7 +503,7 @@ async function handleProfileStories(senderId, username) {
           subtitle: `قراءات: ${story.readCount}, إعجابات: ${story.voteCount}`,
           buttons: [
             botly.createWebURLButton("اقرأ الرواية", story.url),
-            botly.createPostbackButton("عرض الفصول", `parts ${story.url}`),
+            botly.createPostbackButton("عرض الفصول", `parts ${story.id}`),
           ],
         }));
 
@@ -544,5 +565,38 @@ async function searchProfile(query) {
     } catch (error) {
         console.error('Error fetching profiles:', error.message);
         return [];
+    }
+}
+
+
+
+async function getPartDetails(id) {
+    try {
+        const url = `https://www.wattpad.com/v4/parts/${id}/?fields=id,title,url,modifyDate,wordCount,photoUrl,commentCount,voteCount,readCount,voted,pages,text_url,rating,group(id,title,cover,url,user(username,name,avatar,twitter,authorMessage),rating,parts(title,url,id)),source(url,label)`;
+        const response = await axios.get(url, {
+    headers: {
+      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Accept': 'application/json',
+      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
+    }
+  });
+        const data = response.data;
+
+        if (!data.group || !data.group.parts) {
+            throw new Error("Parts list not found.");
+        }
+
+        const parts = data.group.parts.map(part => ({
+            id: part.id,
+            title: part.title,
+            url: part.url
+        }));
+
+        const currentIndex = parts.findIndex(part => part.id === parseInt(id));
+
+        return { currentIndex, parts };
+    } catch (error) {
+        console.error("Error fetching Wattpad part details:", error.message);
+        return { currentIndex: -1, parts: [] };
     }
 }
