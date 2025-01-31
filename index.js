@@ -282,7 +282,7 @@ async function handleParts(senderId, url) {
       users[senderId].parts = parts;
       users[senderId].currentIndex = 0;
 
-      const quickReplies = parts.slice(0, 3).map(part =>
+      const quickReplies = parts.slice(0, 7).map(part =>
         botly.createQuickReply(part.title, `read ${part.id}`)
       );
       quickReplies.push(botly.createQuickReply("عرض المزيد", "more_parts"));
@@ -311,7 +311,7 @@ async function showMoreParts(senderId) {
       );
       quickReplies.push(botly.createQuickReply("عرض المزيد", "more_parts"));
 
-      userParts.currentIndex += 3;
+      userParts.currentIndex += 7;
 
       botly.sendText({
         id: senderId,
