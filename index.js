@@ -89,7 +89,7 @@ botly.on("postback", async (senderId, message, postback) => {
     }
     const userParts = users[senderId];
     if (userParts && userParts.parts) {
-      userParts.currentIndex = 0;
+      //userParts.currentIndex = 0;
       showMoreParts(senderId);
     } else {
       botly.sendText({ id: senderId, text: "لا توجد فصول متاحة للرجوع إليها." });
