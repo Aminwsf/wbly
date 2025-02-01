@@ -89,7 +89,7 @@ botly.on("postback", async (senderId, message, postback) => {
     }
     const userParts = users[senderId];
     if (userParts && userParts.parts) {
-      //userParts.currentIndex = 0;
+      userParts.currentIndex = 0;
       showMoreParts(senderId);
     } else {
       botly.sendText({ id: senderId, text: "لا توجد فصول متاحة للرجوع إليها." });
@@ -367,7 +367,7 @@ async function handleRead(senderId, url) {
         return;
       }
 
-      const currentIndex = user.parts.findIndex(part => part.id === url);
+      const currentIndex = user.parts.findIndex(part => String(part.id) === String(url));
       console.log("Current Index:", currentIndex);
       console.log("Total Parts:", user.parts.length);
       console.log("Current Part ID:", url);
