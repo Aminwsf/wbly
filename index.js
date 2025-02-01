@@ -344,7 +344,7 @@ async function handleRead(senderId, url) {
     }
   });
     const restext = response.data.text;
-    /*const pagess = await scraper.read(url);
+   /* const pagess = await scraper.read(url);
     const pages = pagess.map(page => ({
       page: page.pageNumber,
       content: page.content,
@@ -395,6 +395,7 @@ async function handleRead(senderId, url) {
     }
   } catch (error) {
     botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء القراءة." });
+    console.log(error)
   }
 }
 
