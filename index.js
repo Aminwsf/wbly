@@ -337,38 +337,40 @@ async function showMoreParts(senderId) {
 async function handleRead(senderId, url) {
   try {
     const response = await axios.get(`https://www.wattpad.com/apiv2/storytext?id=${url}&include_paragraph_id=1&output=json`, {
-    headers: {
-      'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Accept': 'application/json',
-      'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
-    }
-  });
+      headers: {
+        'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept': 'application/json',
+        'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
+      }
+    });
+
     const restext = response.data.text;
-   /* const pagess = await scraper.read(url);
-    const pages = pagess.map(page => ({
-      page: page.pageNumber,
-      content: page.content,
-      //url: page.url
-    }));*/
 
     if (restext.length > 0) {
-      //const content = pages.map(page => `Page ${page.page}: ${page.content}`).join("\n\n");
       const content = parser.parse(restext).textContent;
       const chunkSize = 2000;
 
       for (let i = 0; i < content.length; i += chunkSize) {
         const chunk = content.slice(i, i + chunkSize);
-         botly.sendText({ id: senderId, text: chunk });
+        botly.sendText({ id: senderId, text: chunk });
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
 
       if (!users[senderId]) {
-        const dtparts = await getPartDetails(url)
-        users[senderId] = dtparts
+        users[senderId] = await getPartDetails(url);
       }
+      
       const user = users[senderId];
-      const currentIndex = user.parts.findIndex(part => part.id === url);
 
+      if (!user || !user.parts || user.parts.length === 0) {
+        botly.sendText({ id: senderId, text: "تعذر العثور على قائمة الفصول." });
+        return;
+      }
+
+      const currentIndex = user.parts.findIndex(part => part.id === url);
+      console.log("Current Index:", currentIndex);
+      console.log("Total Parts:", user.parts.length);
+      console.log("Current Part ID:", url);
 
       if (currentIndex !== -1 && currentIndex + 1 < user.parts.length) {
         const nextPart = user.parts[currentIndex + 1];
@@ -378,26 +380,27 @@ async function handleRead(senderId, url) {
           text: "نهاية هذا الفصل هل ترغب بالاستمرار؟",
           quick_replies: [
             botly.createQuickReply("الفصل التالي", `read ${nextPart.id}`),
-            botly.createQuickReply("العودة إلى الفصول", `back_to_parts ${nextPart.id}`),
+            botly.createQuickReply("العودة إلى الفصول", `back_to_parts ${url}`),
           ],
         });
       } else {
-          botly.sendText({
-            id: senderId,
-            text: "انتهى هذا الجزء. لم يعد هناك أجزاء متاحة.",
-            quick_replies: [
-              botly.createQuickReply("العودة إلى الفصول", "back_to_parts"),
-            ],
-          });
-        }
+        botly.sendText({
+          id: senderId,
+          text: "انتهى هذا الجزء. لم يعد هناك أجزاء متاحة.",
+          quick_replies: [
+            botly.createQuickReply("العودة إلى الفصول", "back_to_parts"),
+          ],
+        });
+      }
     } else {
       botly.sendText({ id: senderId, text: "لم يتم العثور على محتوى لهذا الفصل." });
     }
   } catch (error) {
     botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء القراءة." });
-    console.log(error)
+    console.error("Error in handleRead:", error);
   }
 }
+
 
 
 async function getParts(url) {
