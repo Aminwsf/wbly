@@ -351,7 +351,7 @@ async function handleRead(senderId, url) {
       //url: page.url
     }));*/
 
-    if (pages.length > 0) {
+    if (restext.length > 0) {
       //const content = pages.map(page => `Page ${page.page}: ${page.content}`).join("\n\n");
       const content = parser.parse(restext).textContent;
       const chunkSize = 2000;
