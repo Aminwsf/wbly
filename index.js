@@ -61,7 +61,7 @@ botly.on("message", async (senderId, message, data) => {
 
 
 // Webhook setup
-botly.on("postback", (senderId, message, postback) => {
+botly.on("postback", async (senderId, message, postback) => {
   console.log(`user: ${senderId} clicked: ${postback}`);
   if (postback) {
   if (postback.startsWith("username ")) {
