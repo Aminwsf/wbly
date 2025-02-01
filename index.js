@@ -81,7 +81,12 @@ botly.on("postback", (senderId, message, postback) => {
   } else if (postback.startsWith("next_part")) {
       const url = postback.replace("next_part ", "").trim();
       handleRead(senderId, url);
-    } else if (postback === "back_to_parts") {
+    } else if (postback.startsWith("back_to_parts")) {
+      const url = postback.replace("back_to_parts ", "").trim();
+    if (!users[senderId]) {
+        const dtparts = await getPartDetails(url)
+        users[senderId] = dtparts
+    }
     const userParts = users[senderId];
     if (userParts && userParts.parts) {
       userParts.currentIndex = 0;
@@ -373,7 +378,7 @@ async function handleRead(senderId, url) {
           text: "نهاية هذا الفصل هل ترغب بالاستمرار؟",
           quick_replies: [
             botly.createQuickReply("الفصل التالي", `read ${nextPart.id}`),
-            botly.createQuickReply("العودة إلى الفصول", "back_to_parts"),
+            botly.createQuickReply("العودة إلى الفصول", `back_to_parts ${nextPart.id}`),
           ],
         });
       } else {
@@ -530,7 +535,7 @@ async function searchProfile(query) {
       'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
           }
         });
-      console.log(response.data)
+      //console.log(response.data)
       return response.data
       //const profiles = response.data
     /*const url = `https://www.wattpad.com/search/${encodeURIComponent(query)}/people`; // Replace with the actual URL
