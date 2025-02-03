@@ -280,8 +280,32 @@ async function handleParts(senderId, url) {
       'Cookie': 'token=503236853%3A2%3A1736640964%3AWeyYHGLHPjqwAMv5G3qdB9ActUoR63I_Bkt2hn7Jd4ZvUtVsuCISkshNVG9NIaat'
     }
   });
-    const parts = response.data.parts;
+    //const parts = response.data.parts;
     // const parts = await getParts(url);
+    const story = response.data;
+    const parts = story.parts;
+
+    if (story.cover) {
+      await botly.sendImage({
+        id: senderId,
+        url: story.cover,
+      });
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+
+    const details = `
+العنوان: ${story.title}
+عدد الفصول: ${story.numParts}
+التقييم: ${story.rating}
+الحالة: ${story.completed ? 'مكتملة' : 'غير مكتملة'}
+الوصف: ${story.description}
+    `;
+
+    await botly.sendText({
+      id: senderId,
+      text: details,
+    }); 
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     if (parts.length > 0) {
       users[senderId].parts = parts;
