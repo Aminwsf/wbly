@@ -43,6 +43,8 @@ botly.on("message", async (senderId, message, data) => {
     } else if (text.startsWith("read ")) {
       const url = text.replace("read ", "").trim();
       await handleRead(senderId, url);
+    } else if (text.startsWith("topics")) {
+      await handleTopics(senderId);
     } else if (text.startsWith("/reset")) {
       delete users[senderId]
       botly.sendText({
@@ -70,6 +72,8 @@ botly.on("postback", async (senderId, message, postback) => {
     } else if (postback.startsWith("parts ")) {
     const url = postback.replace("parts ", "").trim();
     handleParts(senderId, url);
+  } else if (postback.startsWith("topics")) {
+    await handleTopics(senderId);
   } else if (postback.startsWith("read ")) {
     const url = postback.replace("read ", "").trim();
     handleRead(senderId, url);
@@ -94,6 +98,14 @@ botly.on("postback", async (senderId, message, postback) => {
     } else {
       botly.sendText({ id: senderId, text: "لا توجد فصول متاحة للرجوع إليها." });
     }
+  } else if (postback.startsWith("hotlist ")) {
+    const topicName = postback.replace("hotlist ", "");
+    handleHotlist(senderId, topicName);
+  } else if (postback.startsWith("SmoreHotlist ")) {
+    const parts = postback.split(" ");
+    const topicName = parts[1];
+    const offset = parts[2] || 0;
+    handleSmoreHotlist(senderId, topicName, offset);
   } else if (postback === "fblite") {
     users[senderId] = {
       mxilite: false,
@@ -101,7 +113,7 @@ botly.on("postback", async (senderId, message, postback) => {
       parts: [],
       test: "lol"
     };
-    botly.sendText({ id: senderId, text: "عن اي رواية تبحث؟", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
+    botly.sendText({ id: senderId, text: "اكتب اسم الرواية 📚", quick_replies: [botly.createQuickReply("اقتراحات 🔥", "topics"), botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
   } else if (postback === "mxilite") {
     users[senderId] = {
       mxilite: true,
@@ -109,7 +121,7 @@ botly.on("postback", async (senderId, message, postback) => {
       parts: [],
       test: "lol"
     };
-    botly.sendText({ id: senderId, text: "عن اي رواية تبحث؟", quick_replies: [botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
+    botly.sendText({ id: senderId, text: "اكتب اسم الرواية 📚", quick_replies: [botly.createQuickReply("اقتراحات 🔥", "topics"), botly.createQuickReply("إعادة التعيين 🔁", "Reset")] });
   } else if (postback === "Reset") {
     delete users[senderId]
     botly.sendText({
@@ -640,4 +652,120 @@ async function getPartDetails(id) {
         console.error("Error fetching Wattpad part details:", error.message);
         return { currentIndex: -1, parts: [] };
     }
+}
+
+async function handleTopics(senderId) {
+  try {
+    const response = await axios.get(
+      "https://www.wattpad.com/v5/browse/topics?language=16&fields=topics(name,categoryID,browseURL,tagURL)",
+      {
+        headers: {
+          "Accept-Language": "ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    const topics = response.data.topics;
+
+    if (topics.length > 0) {
+      const quickReplies = topics.slice(0, 10).map((topic) =>
+        botly.createQuickReply(topic.name, `hotlist ${topic.name}`)
+      );
+
+      botly.sendText({
+        id: senderId,
+        text: "اختر موضوعًا لرؤية القصص الرائجة:",
+        quick_replies: quickReplies,
+      });
+    } else {
+      botly.sendText({ id: senderId, text: "لم يتم العثور على مواضيع." });
+    }
+  } catch (error) {
+    console.error("Error fetching topics:", error);
+    botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء جلب المواضيع." });
+  }
+}
+
+async function handleHotlist(senderId, topicName, offset = 0) {
+  try {
+    const response = await axios.get(
+      `https://api.wattpad.com/v5/hotlist?tags=${encodeURIComponent(topicName)}&language=16&offset=${offset}&limit=10&fields=stories(id,title,voteCount,readCount,commentCount,tags,user(name,username,avatar),description,cover,completed,rating,mature,url,numParts,modifyDate,categories,firstPartId),total,nextUrl`,
+      {
+        headers: {
+          "Accept-Language": "ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    const results = response.data.stories;
+
+    if (results.length > 0) {
+      const ismxiLite = users[senderId]?.mxilite;
+
+      if (!ismxiLite) {
+        let storyDetails = results
+          .map(
+            (story, index) =>
+              `${index + 1}. ${story.title}\nالمؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 30)}...`
+          )
+          .join("\n\n");
+
+        const quickReplies = results.map((story) =>
+          botly.createQuickReply(story.title, `parts ${story.id}`)
+        );
+        quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
+
+        if (response.data?.nextUrl) {
+          quickReplies.push(
+            botly.createQuickReply("عرض المزيد", `SmoreHotlist ${topicName} ${offset + 10}`)
+          );
+        }
+
+        botly.sendText({
+          id: senderId,
+          text: `${storyDetails}\n\nحدد الرواية:`,
+          quick_replies: quickReplies,
+        });
+      } else {
+        const elements = results.map((story) => ({
+          title: story.title,
+          image_url: story.cover,
+          subtitle: `المؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}...`,
+          buttons: [
+            botly.createWebURLButton("اقرأ على واتباد", story.url),
+            botly.createPostbackButton("عرض الفصول", `parts ${story.id}`),
+          ],
+        }));
+
+        botly.sendGeneric({ id: senderId, elements });
+
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        const quickReplies = [botly.createQuickReply("إعادة التعيين 🔁", "Reset")];
+
+        if (response.data?.nextUrl) {
+          quickReplies.push(
+            botly.createQuickReply("عرض المزيد", `SmoreHotlist ${topicName} ${offset + 10}`)
+          );
+        }
+
+        botly.sendText({
+          id: senderId,
+          text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط اعادة التعيين و اختر فيسبوك لايت",
+          quick_replies: quickReplies,
+        });
+      }
+    } else {
+      botly.sendText({ id: senderId, text: "لم يتم العثور على قصص رائجة لهذا الموضوع." });
+    }
+  } catch (error) {
+    console.error("Error fetching hotlist:", error);
+    botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء جلب القصص الرائجة." });
+  }
+}
+
+async function handleSmoreHotlist(senderId, topicName, offset) {
+  await handleHotlist(senderId, topicName, parseInt(offset));
 }
