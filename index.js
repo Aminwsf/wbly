@@ -673,7 +673,7 @@ async function handleTopics(senderId) {
       const randomTopics = topics.sort(() => Math.random() - 0.5).slice(0, 10);
 
       const quickReplies = randomTopics.map((topic) =>
-        botly.createQuickReply(topic.name, `hotlist ${topic.name}`)
+        botly.createQuickReply(topic.topic, `hotlist ${topic.name}`)
       );
 
       botly.sendText({
