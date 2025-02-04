@@ -314,7 +314,9 @@ async function handleParts(senderId, url) {
       const quickReplies = parts.slice(0, 7).map(part =>
         botly.createQuickReply(part.title, `read ${part.id}`)
       );
+      if (parts.length > 7) {
       quickReplies.push(botly.createQuickReply("عرض المزيد", "more_parts"));
+      }
 
       botly.sendText({
         id: senderId,
@@ -338,9 +340,15 @@ async function showMoreParts(senderId) {
       const quickReplies = userParts.parts.slice(startIndex, startIndex + 7).map(part =>
         botly.createQuickReply(part.title, `read ${part.id}`)
       );
-      quickReplies.push(botly.createQuickReply("عرض المزيد", "more_parts"));
+      if (startIndex + 7 < userParts.parts.length) {
+        quickReplies.push(botly.createQuickReply("عرض المزيد", "more_parts"));
+      } else {
+        quickReplies.push(botly.createQuickReply("عودة إلى الفصول", "back_to_parts"));
+      }
 
       userParts.currentIndex += 7;
+
+     
 
       botly.sendText({
         id: senderId,
