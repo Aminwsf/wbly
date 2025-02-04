@@ -669,7 +669,10 @@ async function handleTopics(senderId) {
     const topics = response.data.topics;
 
     if (topics.length > 0) {
-      const quickReplies = topics.slice(0, 10).map((topic) =>
+      // اختيار 10 مواضيع بشكل عشوائي
+      const randomTopics = topics.sort(() => Math.random() - 0.5).slice(0, 10);
+
+      const quickReplies = randomTopics.map((topic) =>
         botly.createQuickReply(topic.name, `hotlist ${topic.name}`)
       );
 
@@ -686,6 +689,7 @@ async function handleTopics(senderId) {
     botly.sendText({ id: senderId, text: "عذراً، حدث خطأ أثناء جلب المواضيع." });
   }
 }
+
 
 async function handleHotlist(senderId, topicName, offset = 0) {
   try {
