@@ -302,7 +302,7 @@ async function handleParts(senderId, url) {
         id: senderId,
         url: story.cover,
       });
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
 
     const details = `
@@ -317,7 +317,7 @@ async function handleParts(senderId, url) {
       id: senderId,
       text: details,
     }); 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     if (parts.length > 0) {
       users[senderId].parts = parts;
@@ -412,9 +412,7 @@ async function handleRead(senderId, url) {
       }
 
       const currentIndex = user.parts.findIndex(part => String(part.id) === String(url));
-      console.log("Current Index:", currentIndex);
-      console.log("Total Parts:", user.parts.length);
-      console.log("Current Part ID:", url);
+      
 
       if (currentIndex !== -1 && currentIndex + 1 < user.parts.length) {
         const nextPart = user.parts[currentIndex + 1];
@@ -522,7 +520,7 @@ async function handleProfileSearch(senderId, query) {
 
 async function handleProfileStories(senderId, username) {
   try {
-    const response = await axios.get(`https://www.wattpad.com/v4/users/${username}/stories/published?offset=0&limit=11&fields=stories(title,lastPublishedPart,voteCount,readCount,commentCount,cover,tags,url,id,description,categories,completed,mature,rating,rankings,tagRankings,numParts,firstPartId,parts,isPaywalled,paidModel),total`, {
+    const response = await axios.get(`https://www.wattpad.com/v4/users/${username}/stories/published?offset=0&limit=9&fields=stories(title,lastPublishedPart,voteCount,readCount,commentCount,cover,tags,url,id,description,categories,completed,mature,rating,rankings,tagRankings,numParts,firstPartId,parts,isPaywalled,paidModel),total`, {
       headers: {
       'Accept-Language': 'ar-MA,ar;q=0.9,en-US;q=0.8,en;q=0.7',
       'Accept': 'application/json',
@@ -543,6 +541,9 @@ async function handleProfileStories(senderId, username) {
           botly.createQuickReply(story.title, `parts ${story.id}`)
         );
         // quickReplies.push(botly.createQuickReply("رجوع 🔙", "profileBack"));
+        if (response.data?.nextUrl) {
+        quickReplies.push(botly.createQuickReply("عرض المزيد", `Smore ${response.data.nextUrl}`));
+        }
 
         botly.sendText({
           id: senderId,
@@ -562,7 +563,10 @@ async function handleProfileStories(senderId, username) {
 
         botly.sendGeneric({ id: senderId, elements });
         await new Promise(resolve => setTimeout(resolve, 3000));
-        botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط رجوع واختر فيسبوك لايت", quick_replies: [botly.createQuickReply("رجوع 🔙", "profileBack")] });
+        if (response.data?.nextUrl) {
+        quickReplies.push(botly.createQuickReply("عرض المزيد", `Smore ${response.data.nextUrl}`));
+        }
+    botly.sendText({ id: senderId, text: "اذا كنت تستخدم فيسبوك لايت فلن تظهر لك القائمة، إضغط اعادة التعيين و اختر فيسبوك لايت", quick_replies: quickReplies });
       }
     } else {
       botly.sendText({ id: senderId, text: "لم يتم العثور على أي روايات منشورة لهذا المستخدم." });
