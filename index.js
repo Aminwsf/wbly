@@ -177,7 +177,7 @@ async function handleSearch(senderId, query) {
 
       if (!ismxiLite) {
         let storyDetails = results.slice(0, 9).map((story, index) => 
-          `${index + 1}. ${story.title}\nالمؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 30)}...`
+          `${index + 1}. ${story.title}\nالمؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}\n الفصول: ${story.numParts}, الحالة: ${story.completed ? 'مكتملة' : 'غير مكتملة'}\n${story.description.slice(0, 30)}...`
         ).join("\n\n");
 
         const quickReplies = results.slice(0, 9).map(story => 
@@ -197,7 +197,7 @@ async function handleSearch(senderId, query) {
         const elements = results.slice(0, 7).map(story => ({
           title: story.title,
           image_url: story.cover,
-          subtitle: `المؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}, الفصول: ${story.numParts}\n${story.description.slice(0, 20)}...`,
+          subtitle: `المؤلف: ${story.user.name}\nقراءات: ${story.readCount}, إعجابات: ${story.voteCount}\n الفصول: ${story.numParts}, الحالة: ${story.completed ? 'مكتملة' : 'غير مكتملة'}`,
           buttons: [
             botly.createWebURLButton("اقرأ على واتباد", story.url),
             botly.createPostbackButton("عرض الفصول", `parts ${story.id}`),
