@@ -723,7 +723,6 @@ async function handleHotlist(senderId, topicName, offset = 0) {
         const quickReplies = results.map((story) =>
           botly.createQuickReply(story.title, `parts ${story.id}`)
         );
-        quickReplies.push(botly.createQuickReply("إعادة التعيين 🔁", "Reset"));
 
         if (response.data?.nextUrl) {
           quickReplies.push(
@@ -751,7 +750,6 @@ async function handleHotlist(senderId, topicName, offset = 0) {
 
         await new Promise((resolve) => setTimeout(resolve, 3000));
 
-        const quickReplies = [botly.createQuickReply("إعادة التعيين 🔁", "Reset")];
 
         if (response.data?.nextUrl) {
           quickReplies.push(
